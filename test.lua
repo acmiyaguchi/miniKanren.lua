@@ -1,3 +1,4 @@
+package.path = './?.lua;' .. package.path
 local MK = require("mk")
 
 local run = MK.run
@@ -38,10 +39,23 @@ local conso = E.conso
 
 r, a, b, c, d, e, f, g, a1, q, x = fresh_vars(11)
 
-assert(equal(run(false, a, (all(eq(a, b), not_eq(b, 2), not_eq(b, 3)))), { "_.0 not eq: 3,2" }))
-assert(equal(run(false, a, (all(eq(a, b), eq(b, c), not_eq(b, 2), not_eq(b, 3), not_eq(c, 4)))), { "_.0 not eq: 4,3,2" }))
-assert(equal(run(false, a, (all(eq(a, b), not_eq(b, 2), not_eq(b, 3), not_eq(1, 1)))), {}))
--- assert(equal(run(false, a, (all(eq(b, 3), not_eq(a, b)))), { "_.0 not eq: 3" }))
+describe("eq", function()
+   setup(function()
+      a, b, c = fresh_vars(3)
+   end)
+   it("should not be equal", function()
+      res = run(false, a, all(eq(a, b), not_eq(b, 2), not_eq(b, 3)))
+      assert.same({ "_.0 not eq: 3,2" }, res)
+   end)
+   it("should not be equal triplet", function()
+      res = run(false, a, all(eq(a, b), eq(b, c), not_eq(b, 2), not_eq(b, 3), not_eq(c, 4)))
+      assert.same({ "_.0 not eq: 4,3,2" }, res)
+   end)
+   it("does not unify", function()
+      res = run(false, a, all(eq(a, b), not_eq(b, 2), not_eq(b, 3), not_eq(1, 1)))
+      assert.same({}, res)
+   end)
+end)
 
 assert(equal(run(20, a,
        cond(
