@@ -1,7 +1,13 @@
+--- Main miniKanren module.
+-- @module mk
+
 local Var = {}
 local function var(v) return setmetatable({v}, Var) end
 local function is_var(v) return getmetatable(v) == Var end
 
+--- Creates new variables.
+-- @int n number of variables to create
+-- @return variables
 local function fresh_vars(n)
    n = n or 1
    local vars = {}
@@ -32,12 +38,23 @@ local function is_table(o) return type(o) == "table" end
 local function is_function(o) return type(o) == "function" end
 local function is_pair(p) return is_table(p) and (#p == 1 or #p == 2) end
 
+--- Construct a memory object that points to two values.
+-- @param c first value
+-- @param d second value
+-- @return cons pair
 local function cons(c, d) return {c, d} end
+
+--- Get the first element of a cons pair.
+-- @param p the pointer to a cons pair
+-- @return the first element of a cons pair, typically an atom
 local function car(p)
    assert(is_pair(p))
    return p[1]
 end
 
+--- Get the second element of a cons pair.
+-- @param p the pointer to a cons pair
+-- @return the second element of a cons pair, typically a list
 local function cdr(p)
    assert(is_pair(p))
    return #p > 1 and p[2] or {}
@@ -61,6 +78,9 @@ local function tail(t)
    return {select(2, unpack(t))}
 end
 
+--- Create a lisp-like list.
+-- @param ... elements of the list
+-- @return a list of elements
 local function list(...)
    l = {...}
    if is_empty(l) then
@@ -73,7 +93,13 @@ end
 local function st_zero() return false end
 local function unit(s) return s end
 
+--- Success term.
+-- @param s the success value
+-- @return the success value
 local function succeed(s) return unit(s) end
+--- Failure term.
+-- @param s ignored failure value
+-- @return false
 local function fail(s) return st_zero() end
 
 local Substitution = {}
@@ -257,6 +283,10 @@ local function ext_subst_d(x, y, s)
    end
 end
 
+--- Determine if two lua terms are equal to each other.
+-- @param x a lua term
+-- @param y a lua term
+-- @return true if x and y are equal, false otherwise
 local function equal(x, y)
    if x == y then
       return true
@@ -291,6 +321,9 @@ local function verify_subst_d(a, d)
    end
 end
 
+--- Unify two variables.
+-- @param x a variable
+-- @param y a variable
 local function eq(x, y)
    return function(subst)
       local a = unify(x, y, get_a(subst))
@@ -304,6 +337,9 @@ local function eq(x, y)
    end
 end
 
+--- Succeed if two variables unify, fail otherwise.
+-- @param x a variable
+-- @param y a variable
 local function not_eq(x, y)
    return function(subst)
       local s = ext_subst_d(x, y, subst)
@@ -335,6 +371,8 @@ local function bind(a_inf, g)
    end
 end
 
+--- Succeed if all of the given terms unify, fail otherwise.
+-- @param ... a list of terms
 local function all(...)
    local g_list = {...}
    if is_empty(g_list) then
@@ -356,6 +394,8 @@ local function anye(g1, g2)
    end
 end
 
+--- Succeed if any of the terms unify.
+-- @param ... a list of terms
 local function cond(...)
    local g_list = {...}
    if is_empty(g_list) then
@@ -391,6 +431,8 @@ local function bindi(a_inf, g)
    end
 end
 
+--- Succeed if all of the given terms unify, fail otherwise. Interleaved.
+-- @param ... a list of terms
 local function alli(...)
    local g_list = {...}
    if is_empty(g_list) then
@@ -408,6 +450,8 @@ local function anyi(g1, g2)
    return function(s) return mplusi(g1(s), function() return g2(s) end) end
 end
 
+--- Succeed if any of the terms unify. Interleaved.
+-- @param ... a list of terms
 local function condi(...)
    local g_list = {...}
    if is_empty(g_list) then
@@ -441,11 +485,21 @@ local function run_walk(n, v, s, results)
    end
 end
 
+--- Run a query.
+-- @int n the number of results to return
+-- @param v the query variable
+-- @param g the query
+-- @return a list of results
 local function run(n, v, g)
    local s = g(empty_subst)
    return run_walk(n, v, s, {})
 end
 
+--- Run a query and return all results.
+-- This is a shortcut for `run(false, v, g)`
+-- @param v the query variable
+-- @param g the query
+-- @return a list of results
 local function run_all(v, g)
    return run(false, v, g, {})
 end
@@ -472,6 +526,7 @@ local function build_num(bits)
    return do_build_num(bits, 0, 0)
 end
 
+--- @export
 return {
    run=run,
    run_all=run_all,

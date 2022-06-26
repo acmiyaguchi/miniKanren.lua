@@ -1,0 +1,9 @@
+project = 'miniKanren'
+title = 'miniKanren documentation'
+description = 'miniKanren implementation in lua'
+format = 'discount'
+file = './'
+dir = 'docs'
+style = '!fixed'
+use_markdown_titles = true
+sort_modules=true
