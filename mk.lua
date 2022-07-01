@@ -546,4 +546,7 @@ return {
    cdr=cdr,
 
    equal=equal,
+
+   build_bit=build_bit,
+   build_num=build_num,
 }

@@ -6,6 +6,7 @@ local alli = MK.alli
 local condi = MK.condi
 local cond = MK.cond
 local fresh_vars = MK.fresh_vars
+local list = MK.list
 
 local E = require("extend")
 local nullo = E.nullo
@@ -51,12 +52,12 @@ function addero(d, n, m, r)
    return condi(
       all(eq(0, d), eq({}, m), eq(n, r)),
       all(eq(0, d), eq({}, n), eq(m, r), poso(m)),
-      all(eq(1, d), eq({}, m), function(s) return addero(0, n, {1}, r)(s) end),
-      all(eq(1, d), eq({}, n), poso(m), function(s) return addero(0, {1}, m, r)(s) end),
-      all(eq({1}, n), eq({1}, m), eq({a, {c}}, r), full_addero(d, 1, 1, a, c)),
-      all(eq({1}, n), function(s) return gen_addero(d, n, m, r)(s) end),
-      all(eq({1}, m), gt1o(n), gt1o(r),
-          function(s) return addero(d, {1}, n, r)(s) end),
+      all(eq(1, d), eq({}, m), function(s) return addero(0, n, list(1), r)(s) end),
+      all(eq(1, d), eq({}, n), poso(m), function(s) return addero(0, list(1), m, r)(s) end),
+      all(eq(list(1), n), eq(list(1), m), eq({a, list(c)}, r), full_addero(d, 1, 1, a, c)),
+      all(eq(list(1), n), function(s) return gen_addero(d, n, m, r)(s) end),
+      all(eq(list(1), m), gt1o(n), gt1o(r),
+          function(s) return addero(d, list(1), n, r)(s) end),
       all(gt1o(n), function(s) return gen_addero(d, n, m, r)(s) end)
    )
 end
@@ -66,7 +67,7 @@ local function pluso(n, m, k)
 end
 
 local function plus_1o(n, k)
-   return pluso({1}, n, k)
+   return pluso(list(1), n, k)
 end
 
 local function minuso(n, m, k)

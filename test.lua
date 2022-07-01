@@ -18,6 +18,9 @@ local car = MK.car
 local cdr = MK.cdr
 local equal = MK.equal
 
+local build_bit = MK.build_bit
+local build_num = MK.build_num
+
 local NUM = require("num")
 local poso = NUM.poso
 local gt1o = NUM.gt1o
@@ -54,6 +57,55 @@ describe("eq", function()
    it("does not unify", function()
       res = run(false, a, all(eq(a, b), not_eq(b, 2), not_eq(b, 3), not_eq(1, 1)))
       assert.same({}, res)
+   end)
+end)
+
+describe("numbers", function()
+   setup(function()
+      a, b, c = fresh_vars(3)
+   end)
+   it("build_bit for the first 5 numbers", function()
+      -- little endian
+      assert.same({}, build_bit(0))
+      assert.same(list(1), build_bit(1))
+      assert.same(list(0, 1), build_bit(2))
+      assert.same(list(1, 1), build_bit(3))
+      assert.same(list(0, 0, 1), build_bit(4))
+      assert.same(list(1, 0, 1), build_bit(5))
+   end)
+   it("build_num is the inverse of build_bit", function()
+      for i=1,32 do
+         assert.same(i, build_num(build_bit(i)))
+      end
+   end)
+   it("pluso behaves correctly", function()
+      local function add(x, y, expect)
+         local a, b, c = fresh_vars(3)
+         local res = run(false, c, all(
+            eq(a, build_bit(x)),
+            eq(b, build_bit(y)),
+            pluso(a, b, c)
+         ))
+         assert.same(#res, 1)
+         assert.same(build_bit(expect), res[1])
+      end
+      add(0, 0, 0)
+      add(0, 1, 1)
+      add(1, 0, 1)
+      add(1, 1, 2)
+      add(0, 2, 2)
+      add(1, 2, 3)
+      add(2, 1, 3)
+   end)
+   it("plus_1o adds 1 to null", function()
+      res = run(false, a, plus_1o({}, a))
+      assert.same(#res, 1)
+      assert.same(build_bit(1), res[1])
+   end)
+   it("plus_1o add 1 to 1", function()
+      res = run(false, b, plus_1o(build_bit(1), a))
+      assert.same(#res, 1)
+      assert.same(build_bit(2), res[1])
    end)
 end)
 
