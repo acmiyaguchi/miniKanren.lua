@@ -62,7 +62,27 @@ end)
 
 describe("numbers", function()
    setup(function()
-      a, b, c = fresh_vars(3)
+      a, b, c, d, e = fresh_vars(5)
+      function do_op3(op, x, y, expect)
+         local res = run(false, c, all(
+            eq(a, build_bit(x)),
+            eq(b, build_bit(y)),
+            op(a, b, c)
+         ))
+         assert.same(#res, 1)
+         assert.same(build_bit(expect), res[1])
+      end
+      function do_op4(op, x, y, expect1, expect2)
+         local res = run(false, e, all(
+            eq(a, build_bit(x)),
+            eq(b, build_bit(y)),
+            op(a, b, c, d),
+            eq({c, d}, e)
+         ))
+         assert.same(#res, 1)
+         assert.same(build_bit(expect1), res[1][1])
+         assert.same(build_bit(expect2), res[1][2])
+      end
    end)
    it("build_bit for the first 5 numbers", function()
       -- little endian
@@ -79,16 +99,7 @@ describe("numbers", function()
       end
    end)
    it("pluso behaves correctly", function()
-      local function add(x, y, expect)
-         local a, b, c = fresh_vars(3)
-         local res = run(false, c, all(
-            eq(a, build_bit(x)),
-            eq(b, build_bit(y)),
-            pluso(a, b, c)
-         ))
-         assert.same(#res, 1)
-         assert.same(build_bit(expect), res[1])
-      end
+      local function add(x, y, expect) do_op3(pluso, x, y, expect) end
       add(0, 0, 0)
       add(0, 1, 1)
       add(1, 0, 1)
@@ -97,15 +108,65 @@ describe("numbers", function()
       add(1, 2, 3)
       add(2, 1, 3)
    end)
+   it("pluso enumerates all possible combinations", function()
+      res = run(false, c, all(
+         pluso(a, b, build_bit(4)),
+         eq({a, b}, c)
+      ))
+      -- 0-4, 1-3, 2-2, 3-1, 4-0
+      assert.same(#res, 5)
+   end)
    it("plus_1o adds 1 to null", function()
       res = run(false, a, plus_1o({}, a))
       assert.same(#res, 1)
       assert.same(build_bit(1), res[1])
    end)
    it("plus_1o add 1 to 1", function()
-      res = run(false, b, plus_1o(build_bit(1), a))
+      res = run(false, a, plus_1o(build_bit(1), a))
       assert.same(#res, 1)
       assert.same(build_bit(2), res[1])
+   end)
+   it("minuso behaves correctly", function()
+      local function sub(x, y, expect) do_op3(minuso, x, y, expect) end
+      sub(0, 0, 0)
+      sub(1, 0, 1)
+      sub(1, 1, 0)
+      sub(2, 0, 2)
+      sub(2, 1, 1)
+   end)
+   it("minuso does not return results for negative numbers", function()
+      res = run(false, c, all(
+         minuso(build_bit(0), build_bit(1), c)
+      ))
+      assert.same(#res, 0)
+   end)
+   it("multo behaves correctly", function()
+      local function mult(x, y, expect) do_op3(multo, x, y, expect) end
+      mult(0, 1, 0)
+      mult(1, 0, 0)
+      mult(1, 1, 1)
+      mult(1, 2, 2)
+      mult(2, 1, 2)
+      mult(2, 2, 4)
+   end)
+   it("divo behaves correctly", function()
+      local function div(x, y, e1, e2) do_op4(divo, x, y, e1, e2) end
+      div(0, 1, 0, 0)
+      div(0, 2, 0, 0)
+      div(1, 1, 1, 0)
+      div(1, 2, 0, 1)
+      div(2, 1, 2, 0)
+      div(5, 2, 2, 1)
+      div(4, 2, 2, 0)
+   end)
+   it("divo does not divide by 0", function()
+      for i=1,3 do
+         res = run(false, c, all(
+            divo(build_bit(i), build_bit(0), a, b),
+            eq({a, b}, c)
+         ))
+         assert.same(#res, 0)
+      end
    end)
 end)
 

@@ -504,6 +504,9 @@ local function run_all(v, g)
    return run(false, v, g, {})
 end
 
+--- Convert a number into a list of bits
+-- @param n a number
+-- @return a list of bits
 local function build_bit(n)
    if n % 2 == 1 then
       return cons(1, build_bit((n - 1) / 2))
@@ -522,6 +525,9 @@ local function do_build_num(bits, n, r)
    end
 end
 
+--- Convert a series of bits into a number
+-- @param bits a list of bits
+-- @return a number
 local function build_num(bits)
    return do_build_num(bits, 0, 0)
 end
